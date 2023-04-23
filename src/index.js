@@ -1,3 +1,4 @@
+
 import Mixin from './mixin';
 import Logger from './logger';
 import Listener from './listener';
@@ -5,7 +6,6 @@ import Emitter from './emitter';
 import SocketIO from 'socket.io-client';
 
 export default class VueSocketIO {
-
   /**
    * lets take all resource
    * @param io
@@ -13,13 +13,11 @@ export default class VueSocketIO {
    * @param debug
    * @param options
    */
-  constructor({ connections, vuex, debug, options }) {
-
+  constructor({ connection, vuex, debug, options }) {
     Logger.debug = debug;
-    this.io = this.connect(connections, options);
+    this.io = this.connect(connection, options);
     this.emitter = new Emitter(vuex);
     this.listener = new Listener(this.io, this.emitter);
-
   }
 
   /**
@@ -27,7 +25,6 @@ export default class VueSocketIO {
    * @param Vue
    */
   install(Vue) {
-
     const version = Number(Vue.version.split('.')[0])
 
     if (version >= 3) {
@@ -41,35 +38,24 @@ export default class VueSocketIO {
     Vue.mixin(Mixin);
 
     Logger.info('Vue-Socket.io plugin enabled');
-
   }
-
 
   /**
    * registering SocketIO instance
-   * @param connections
+   * @param connection
    * @param options
    */
-  connect(connections, options) {
-
-    if (connections && typeof connections === 'object') {
-
+  connect(connection, options) {
+    if (connection && typeof connection === 'object') {
       Logger.info('Received socket.io-client instance');
 
-      return connections;
-
-    } else if (typeof connections === 'string') {
-
+      return connection;
+    } else if (typeof connection === 'string') {
       Logger.info('Received connection string');
 
-      return this.io = SocketIO(connections, options);
-
+      return (this.io = SocketIO(connection, options));
     } else {
-
       throw new Error('Unsupported connection type');
-
     }
-
   }
-
 }

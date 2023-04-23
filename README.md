@@ -17,12 +17,12 @@
 	<img alt="Patreon" src="https://c5.patreon.com/external/logo/become_a_patron_button.png" height="50" />
 </a>
 </p>
-<p>Vue-Socket.io is a socket.io integration for Vuejs, easy to use, supporting Vuex and component level socket consumer managements.<p>
+<p>Vue-Socket.io is a socket.io integration for Vuejs, easy to use, supporting Vuex and component level socket consumer managements<p>
 
 ###### Demo
 - <a href="http://metinseylan.com/vuesocketio/" target="_blank">Chat Application</a>
 - <a href="http://metinseylan.com" target="_blank">Car Tracking Application</a>
-<p>You can also check my other npm library <a href="https://github.com/MetinSeylan/Nestjs-OpenTelemetry">Nestjs OpenTelemetry</a></p>
+
 <p>
 are you looking for old documentation? <a href="https://github.com/MetinSeylan/Vue-Socket.io/blob/master/docs/OLD_README.md">it's here</a>
 </p>
@@ -89,12 +89,12 @@ new Vue({
 debug|Boolean|`false`|Optional|Enable logging for debug
 connection|String/Socket.io-client|`null`|Required|Websocket server url or socket.io-client instance
 vuex.store|Vuex|`null`|Optional|Vuex store instance
-vuex.actionPrefix|String|`null`|Optional|Prefix for emitting server side vuex actions
-vuex.mutationPrefix|String |`null`|Optional|Prefix for emitting server side vuex mutations
+vuex.actionPrefix|String/Function|`null`|Optional|Prefix for emitting server side vuex actions
+vuex.mutationPrefix|String/Function|`null`|Optional|Prefix for emitting server side vuex mutations
 
 #### 🌈 Component Level Usage
 
-<p>If you want to listen socket events from component side, you need to add `sockets` object in Vue component. After that every function will start to listen events, depends on object key</p>
+<p>If you want to listen socket events from component side, you need to add `sockets` object in Vue component, and every function will start to listen events, depends on object key</p>
 
 ``` javascript
 new Vue({
@@ -179,6 +179,109 @@ export default new Vuex.Store({
     }
 })
 ```
+
+#### 🏆 Connection Namespace
+
+``` javascript
+import Vue from 'vue'
+import store from './store'
+import App from './App.vue'
+import VueSocketIO from 'vue-socket.io'
+
+const app = SocketIO('http://localhost:1090', {
+  useConnectionNamespace: true,
+});
+
+const chat = SocketIO('http://localhost:1090/chat', {
+  useConnectionNamespace: true,
+  autoConnect: false,
+});
+
+Vue.use(new VueSocketIO({
+    debug: true,
+    connection: {
+        app,
+        chat
+    },
+    vuex: {
+        store,
+        actionPrefix: eventName => {
+          return (`SOCKET_` + eventName).toUpperCase();
+        },
+        mutationPrefix: eventName => {
+          return (`SOCKET_` + eventName).toUpperCase();
+        },
+    },
+    options: { path: "/my-app/" } //Optional options
+}))
+
+new Vue({
+    router,
+    store,
+    render: h => h(App)
+}).$mount('#app')
+```
+
+Then use it like this:
+
+``` javascript
+new Vue({
+  sockets: {
+    app: {
+      connect: function() {
+        console.log('socket connected');
+      },
+      customEmit: function(data) {
+        console.log('this method was fired by the socket server');
+      },
+    },
+    chat: {
+      connect: function() {
+        console.log('socket connected');
+      },
+      customEmit: function(data) {
+        console.log('this method was fired by the socket server');
+      },
+    },
+  },
+  methods: {
+    clickAppButton: function(data) {
+      // $socket.app is socket.io-client instance
+      this.$socket.app.emit('emit_method', data);
+    },
+    clickChatButton: function(data) {
+      // $socket.chat is socket.io-client instance
+      this.$socket.chat.emit('emit_method', data);
+    },
+  },
+});
+
+```
+
+vuex
+
+``` javascript
+import Vue from 'vue'
+import Vuex from 'vuex'
+
+Vue.use(Vuex)
+
+export default new Vuex.Store({
+    state: {},
+    mutations: {
+        "<MUTATION_PREFIX>_<MY_NAMESPACE>_<EVENT_NAME>"() {
+            // do something
+        }
+    },
+    actions: {
+        "<ACTION_PREFIX>_<MY_NAMESPACE>_<EVENT_NAME>"() {
+            // do something
+        }
+    }
+})
+```
+
+
 
 ## Stargazers over time
 

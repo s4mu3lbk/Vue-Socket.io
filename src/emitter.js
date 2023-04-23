@@ -1,14 +1,13 @@
 import Logger from './logger';
 
 export default class EventEmitter {
-
   constructor(vuex = {}) {
     Logger.info(vuex ? `Vuex adapter enabled` : `Vuex adapter disabled`);
     Logger.info(vuex.mutationPrefix ? `Vuex socket mutations enabled` : `Vuex socket mutations disabled`);
     Logger.info(vuex ? `Vuex socket actions enabled` : `Vuex socket actions disabled`);
     this.store = vuex.store;
     this.actionPrefix = vuex.actionPrefix ? vuex.actionPrefix : 'SOCKET_';
-    this.mutationPrefix = vuex.mutationPrefix;
+    this.mutationPrefix = vuex.mutationPrefix ? vuex.mutationPrefix : 'SOCKET_';
     this.listeners = new Map();
   }
 
@@ -19,20 +18,14 @@ export default class EventEmitter {
    * @param component
    */
   addListener(event, callback, component) {
-
     if (typeof callback === 'function') {
-
       if (!this.listeners.has(event)) this.listeners.set(event, []);
       this.listeners.get(event).push({ callback, component });
 
       Logger.info(`#${event} subscribe, component: ${component.$options.name}`);
-
     } else {
-
       throw new Error(`callback must be a function`);
-
     }
-
   }
 
   /**
@@ -41,12 +34,8 @@ export default class EventEmitter {
    * @param component
    */
   removeListener(event, component) {
-
     if (this.listeners.has(event)) {
-
-      const listeners = this.listeners.get(event).filter(listener => (
-        listener.component !== component
-      ));
+      const listeners = this.listeners.get(event).filter(listener => listener.component !== component);
 
       if (listeners.length > 0) {
         this.listeners.set(event, listeners);
@@ -55,9 +44,7 @@ export default class EventEmitter {
       }
 
       Logger.info(`#${event} unsubscribe, component: ${component.$options.name}`);
-
     }
-
   }
 
   /**
@@ -66,23 +53,18 @@ export default class EventEmitter {
    * @param args
    */
   emit(event, args) {
-
     if (this.listeners.has(event)) {
-
       Logger.info(`Broadcasting: #${event}, Data:`, args);
 
-      this.listeners.get(event).forEach((listener) => {
+      this.listeners.get(event).forEach(listener => {
         listener.callback.call(listener.component, args);
       });
-
     }
 
     if (event !== 'ping' && event !== 'pong') {
       this.dispatchStore(event, args);
     }
-
   }
-
 
   /**
    * dispatching vuex actions
@@ -90,47 +72,42 @@ export default class EventEmitter {
    * @param args
    */
   dispatchStore(event, args) {
-
     if (this.store && this.store._actions) {
-
-      let prefixed_event = this.actionPrefix + event;
+      let prefixedEvent;
+      if (typeof this.actionPrefix === 'function') {
+        prefixedEvent = this.actionPrefix(event);
+      } else {
+        prefixedEvent = this.actionPrefix + event;
+      }
 
       for (let key in this.store._actions) {
-
         let action = key.split('/').pop();
 
-        if (action === prefixed_event) {
-
+        if (action === prefixedEvent) {
           Logger.info(`Dispatching Action: ${key}, Data:`, args);
 
           this.store.dispatch(key, args);
-
         }
-
       }
-
-      if (this.mutationPrefix) {
-
-        let prefixed_event = this.mutationPrefix + event;
-
-        for (let key in this.store._mutations) {
-
-          let mutation = key.split('/').pop();
-
-          if (mutation === prefixed_event) {
-
-            Logger.info(`Commiting Mutation: ${key}, Data:`, args);
-
-            this.store.commit(key, args);
-
-          }
-
-        }
-
-      }
-
     }
 
-  }
+    if (this.store && this.store._mutations) {
+      let prefixedEvent;
+      if (typeof this.mutationPrefix === 'function') {
+        prefixedEvent = this.mutationPrefix(event);
+      } else {
+        prefixedEvent = (this.mutationPrefix || '') + event;
+      }
 
+      for (let key in this.store._mutations) {
+        let mutation = key.split('/').pop();
+
+        if (mutation === prefixedEvent) {
+          Logger.info(`Commiting Mutation: ${key}, Data:`, args);
+
+          this.store.commit(key, args);
+        }
+      }
+    }
+  }
 }
