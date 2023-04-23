@@ -1,56 +1,56 @@
 export default {
 
-    /**
-     *  Assign runtime callbacks
-     */
-    beforeCreate(){
+  /**
+   *  Assign runtime callbacks
+   */
+  beforeCreate() {
 
-        if(!this.sockets) this.sockets = {};
+    if (!this.sockets) this.sockets = {};
 
-        this.sockets.subscribe = (event, callback) => {
-            this.$vueSocketIo.emitter.addListener(event, callback, this);
-        };
+    this.sockets.subscribe = (event, callback) => {
+      this.$vueSocketIo.emitter.addListener(event, callback, this);
+    };
 
-        this.sockets.unsubscribe = (event) => {
-            this.$vueSocketIo.emitter.removeListener(event, this);
-        };
+    this.sockets.unsubscribe = (event) => {
+      this.$vueSocketIo.emitter.removeListener(event, this);
+    };
 
-    },
+  },
 
-    /**
-     * Register all socket events
-     */
-    mounted(){
+  /**
+   * Register all socket events
+   */
+  mounted() {
 
-        if(this.$options.sockets){
+    if (this.$options.sockets) {
 
-            Object.keys(this.$options.sockets).forEach(event => {
+      Object.keys(this.$options.sockets).forEach(event => {
 
-                if(event !== 'subscribe' && event !== 'unsubscribe') {
-                    this.$vueSocketIo.emitter.addListener(event, this.$options.sockets[event], this);
-                }
-
-            });
-
+        if (event !== 'subscribe' && event !== 'unsubscribe') {
+          this.$vueSocketIo.emitter.addListener(event, this.$options.sockets[event], this);
         }
 
-    },
-
-    /**
-     * unsubscribe when component unmounting
-     */
-    beforeDestroy(){
-
-        if(this.$options.sockets){
-
-            Object.keys(this.$options.sockets).forEach(event => {
-
-                this.$vueSocketIo.emitter.removeListener(event, this);
-
-            });
-
-        }
+      });
 
     }
+
+  },
+
+  /**
+   * unsubscribe when component unmounting
+   */
+  beforeDestroy() {
+
+    if (this.$options.sockets) {
+
+      Object.keys(this.$options.sockets).forEach(event => {
+
+        this.$vueSocketIo.emitter.removeListener(event, this);
+
+      });
+
+    }
+
+  }
 
 }

@@ -3,33 +3,33 @@
  */
 export default new class VueSocketIOLogger {
 
-    constructor() {
-        this.debug = false;
-        this.prefix = '%cVue-Socket.io: ';
-    }
+  constructor() {
+    this.debug = false;
+    this.prefix = '%cVue-Socket.io: ';
+  }
 
-    info(text, data = '') {
+  info(text, data = '') {
 
-        if(this.debug) window.console.info(this.prefix+`%c${text}`, 'color: blue; font-weight: 600', 'color: #333333', data);
+    if (this.debug) window.console.info(this.prefix + `%c${text}`, 'color: blue; font-weight: 600', 'color: #333333', data);
 
-    }
+  }
 
-    error() {
+  error() {
 
-        if(this.debug) window.console.error(this.prefix, ...arguments);
+    if (this.debug) window.console.error(this.prefix, ...arguments);
 
-    }
+  }
 
-    warn() {
+  warn() {
 
-        if(this.debug) window.console.warn(this.prefix, ...arguments);
+    if (this.debug) window.console.warn(this.prefix, ...arguments);
 
-    }
+  }
 
-    event(text, data = ''){
+  event(text, data = '') {
 
-        if(this.debug) window.console.info(this.prefix+`%c${text}`, 'color: blue; font-weight: 600', 'color: #333333', data);
+    if (this.debug) window.console.info(this.prefix + `%c${text}`, 'color: blue; font-weight: 600', 'color: #333333', data);
 
-    }
+  }
 
 }

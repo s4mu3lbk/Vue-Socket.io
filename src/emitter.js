@@ -1,136 +1,136 @@
 import Logger from './logger';
 
-export default class EventEmitter{
+export default class EventEmitter {
 
-    constructor(vuex = {}){
-        Logger.info(vuex ? `Vuex adapter enabled` : `Vuex adapter disabled`);
-        Logger.info(vuex.mutationPrefix ? `Vuex socket mutations enabled` : `Vuex socket mutations disabled`);
-        Logger.info(vuex ? `Vuex socket actions enabled` : `Vuex socket actions disabled`);
-        this.store = vuex.store;
-        this.actionPrefix = vuex.actionPrefix ? vuex.actionPrefix : 'SOCKET_';
-        this.mutationPrefix = vuex.mutationPrefix;
-        this.listeners = new Map();
-    }
+  constructor(vuex = {}) {
+    Logger.info(vuex ? `Vuex adapter enabled` : `Vuex adapter disabled`);
+    Logger.info(vuex.mutationPrefix ? `Vuex socket mutations enabled` : `Vuex socket mutations disabled`);
+    Logger.info(vuex ? `Vuex socket actions enabled` : `Vuex socket actions disabled`);
+    this.store = vuex.store;
+    this.actionPrefix = vuex.actionPrefix ? vuex.actionPrefix : 'SOCKET_';
+    this.mutationPrefix = vuex.mutationPrefix;
+    this.listeners = new Map();
+  }
 
-    /**
-     * register new event listener with vuejs component instance
-     * @param event
-     * @param callback
-     * @param component
-     */
-    addListener(event, callback, component){
+  /**
+   * register new event listener with vuejs component instance
+   * @param event
+   * @param callback
+   * @param component
+   */
+  addListener(event, callback, component) {
 
-        if(typeof callback === 'function'){
+    if (typeof callback === 'function') {
 
-            if (!this.listeners.has(event)) this.listeners.set(event, []);
-            this.listeners.get(event).push({ callback, component });
+      if (!this.listeners.has(event)) this.listeners.set(event, []);
+      this.listeners.get(event).push({ callback, component });
 
-            Logger.info(`#${event} subscribe, component: ${component.$options.name}`);
+      Logger.info(`#${event} subscribe, component: ${component.$options.name}`);
 
-        } else {
+    } else {
 
-            throw new Error(`callback must be a function`);
-
-        }
+      throw new Error(`callback must be a function`);
 
     }
 
-    /**
-     * remove a listenler
-     * @param event
-     * @param component
-     */
-    removeListener(event, component){
+  }
 
-        if(this.listeners.has(event)){
+  /**
+   * remove a listenler
+   * @param event
+   * @param component
+   */
+  removeListener(event, component) {
 
-            const listeners = this.listeners.get(event).filter(listener => (
-                listener.component !== component
-            ));
+    if (this.listeners.has(event)) {
 
-            if (listeners.length > 0) {
-                this.listeners.set(event, listeners);
-            } else {
-                this.listeners.delete(event);
-            }
+      const listeners = this.listeners.get(event).filter(listener => (
+        listener.component !== component
+      ));
 
-            Logger.info(`#${event} unsubscribe, component: ${component.$options.name}`);
+      if (listeners.length > 0) {
+        this.listeners.set(event, listeners);
+      } else {
+        this.listeners.delete(event);
+      }
 
-        }
-
-    }
-
-    /**
-     * broadcast incoming event to components
-     * @param event
-     * @param args
-     */
-    emit(event, args){
-
-        if(this.listeners.has(event)){
-
-            Logger.info(`Broadcasting: #${event}, Data:`, args);
-
-            this.listeners.get(event).forEach((listener) => {
-                listener.callback.call(listener.component, args);
-            });
-
-        }
-
-        if(event !== 'ping' && event !== 'pong') {
-            this.dispatchStore(event, args);
-        }
+      Logger.info(`#${event} unsubscribe, component: ${component.$options.name}`);
 
     }
 
+  }
 
-    /**
-     * dispatching vuex actions
-     * @param event
-     * @param args
-     */
-    dispatchStore(event, args){
+  /**
+   * broadcast incoming event to components
+   * @param event
+   * @param args
+   */
+  emit(event, args) {
 
-        if(this.store && this.store._actions){
+    if (this.listeners.has(event)) {
 
-            let prefixed_event = this.actionPrefix + event;
+      Logger.info(`Broadcasting: #${event}, Data:`, args);
 
-            for (let key in this.store._actions) {
+      this.listeners.get(event).forEach((listener) => {
+        listener.callback.call(listener.component, args);
+      });
 
-                let action = key.split('/').pop();
+    }
 
-                if(action === prefixed_event) {
+    if (event !== 'ping' && event !== 'pong') {
+      this.dispatchStore(event, args);
+    }
 
-                    Logger.info(`Dispatching Action: ${key}, Data:`, args);
+  }
 
-                    this.store.dispatch(key, args);
 
-                }
+  /**
+   * dispatching vuex actions
+   * @param event
+   * @param args
+   */
+  dispatchStore(event, args) {
 
-            }
+    if (this.store && this.store._actions) {
 
-            if(this.mutationPrefix) {
+      let prefixed_event = this.actionPrefix + event;
 
-                let prefixed_event = this.mutationPrefix + event;
+      for (let key in this.store._actions) {
 
-                for (let key in this.store._mutations) {
+        let action = key.split('/').pop();
 
-                    let mutation = key.split('/').pop();
+        if (action === prefixed_event) {
 
-                    if(mutation === prefixed_event) {
+          Logger.info(`Dispatching Action: ${key}, Data:`, args);
 
-                        Logger.info(`Commiting Mutation: ${key}, Data:`, args);
-
-                        this.store.commit(key, args);
-
-                    }
-
-                }
-
-            }
+          this.store.dispatch(key, args);
 
         }
 
+      }
+
+      if (this.mutationPrefix) {
+
+        let prefixed_event = this.mutationPrefix + event;
+
+        for (let key in this.store._mutations) {
+
+          let mutation = key.split('/').pop();
+
+          if (mutation === prefixed_event) {
+
+            Logger.info(`Commiting Mutation: ${key}, Data:`, args);
+
+            this.store.commit(key, args);
+
+          }
+
+        }
+
+      }
+
     }
+
+  }
 
 }
